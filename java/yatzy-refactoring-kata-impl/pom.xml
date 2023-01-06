@@ -1,0 +1,74 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <!-- ======================================================== -->
+    <!-- Parent -->
+    <!-- ======================================================== -->
+    <parent>
+        <groupId>com.github.emilybache</groupId>
+        <artifactId>yatzy-refactoring-kata-java</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <!-- ======================================================== -->
+    <!-- Project configuration -->
+    <!-- ======================================================== -->
+    <groupId>com.github.emilybache</groupId>
+    <artifactId>yatzy-refactoring-kata-impl</artifactId>
+    <version>1.0.0</version>
+
+    <!-- ======================================================== -->
+    <!-- Project properties -->
+    <!-- ======================================================== -->
+    <properties>
+        <java.version>11</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+
+        <!-- Dependencies versions-->
+        <app.api.version>1.0.0</app.api.version>
+
+        <!-- Test dependencies versions-->
+        <junit.version>4.13.2</junit.version>
+
+        <!-- Maven plugin versions-->
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+    </properties>
+
+    <!-- ========================================= -->
+    <!-- Dependencies declaration -->
+    <!-- ========================================= -->
+    <dependencies>
+        <!-- Public Yatzy API -->
+        <dependency>
+            <groupId>com.github.emilybache</groupId>
+            <artifactId>yatzy-refactoring-kata-api</artifactId>
+            <version>${app.api.version}</version>
+        </dependency>
+
+        <!-- ========================================= -->
+        <!-- Test dependencies declaration -->
+        <!-- ========================================= -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- ======================================================== -->
+    <!-- Build configuration -->
+    <!-- ======================================================== -->
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

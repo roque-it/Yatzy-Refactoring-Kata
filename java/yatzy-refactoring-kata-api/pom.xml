@@ -1,0 +1,54 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <!-- ======================================================== -->
+    <!-- Parent -->
+    <!-- ======================================================== -->
+    <parent>
+        <groupId>com.github.emilybache</groupId>
+        <artifactId>yatzy-refactoring-kata-java</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <!-- ======================================================== -->
+    <!-- Project configuration -->
+    <!-- ======================================================== -->
+    <groupId>com.github.emilybache</groupId>
+    <artifactId>yatzy-refactoring-kata-api</artifactId>
+    <version>1.0.0</version>
+
+    <!-- ======================================================== -->
+    <!-- Project properties -->
+    <!-- ======================================================== -->
+    <properties>
+        <java.version>11</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+
+        <!-- Maven plugin versions-->
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+    </properties>
+
+    <!-- ========================================= -->
+    <!-- Dependencies declaration -->
+    <!-- ========================================= -->
+    <dependencies>
+        <!-- Do not use this section, except for test scope. Domain must be totally dependency/framework free -->
+        <!-- See Clean Architecture: https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html-->
+    </dependencies>
+
+    <!-- ======================================================== -->
+    <!-- Build configuration -->
+    <!-- ======================================================== -->
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
