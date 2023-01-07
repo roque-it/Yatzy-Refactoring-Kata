@@ -8,3 +8,4 @@ As I don't know if this library is used by an application in production, I'm ref
 Step 1: format, clean and rearrange code for a better understanding (using editorconfig)
 Step 2: split project to decouple legacy API contract from the new API (see constraints above)
 Step 3: split code to decouple legacy API contract from the new API (in creating a "bridge" to the new API)
+Step 4: homogenize methods parameters in introducing a transport object
