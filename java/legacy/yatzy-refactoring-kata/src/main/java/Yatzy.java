@@ -1,121 +1,121 @@
-import com.github.emilybache.api.DiceRollDto;
+import com.github.emilybache.api.YatzeCategory;
 import com.github.emilybache.api.YatzyScoreApi;
 import com.github.emilybache.impl.YatzyScoreApiImpl;
 
-import static com.github.emilybache.api.DiceRollDto.of;
+import static com.github.emilybache.api.YatzeCategory.*;
 
 public class Yatzy {
-    private static final YatzyScoreApi instance = YatzyScoreApiImpl.getInstance();
+    private static final YatzyScoreApi instance = new YatzyScoreApiImpl();
 
-    protected DiceRollDto roll;
+    protected int[] dice;
 
     public Yatzy(int die1, int die2, int die3, int die4, int die5) {
-        roll = DiceRollDto.of(die1, die2, die3, die4, die5);
+        dice = new int[]{die1, die2, die3, die4, die5};
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryChance(DiceRollDto)
+     * @see YatzeCategory#CHANCE
      */
-    public static <T extends DiceRollDto> int chance(int die1, int die2, int die3, int die4, int die5) {
-        return instance.scoreForCategoryChance(of(die1, die2, die3, die4, die5));
+    public static int chance(int die1, int die2, int die3, int die4, int die5) {
+        return instance.processScore(CHANCE, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryFourOfAKind(DiceRollDto)
+     * @see YatzeCategory#FOUR_OF_A_KIND
      */
     public static int four_of_a_kind(int die1, int die2, int die3, int die4, int die5) {
-        return instance.scoreForCategoryFourOfAKind(of(die1, die2, die3, die4, die5));
+        return instance.processScore(FOUR_OF_A_KIND, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryFullHouse(DiceRollDto)
+     * @see YatzeCategory#FULL_HOUSE
      */
     public static int fullHouse(int die1, int die2, int die3, int die4, int die5) {
-        return instance.scoreForCategoryFullHouse(of(die1, die2, die3, die4, die5));
+        return instance.processScore(FULL_HOUSE, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryLargeStraight(DiceRollDto)
+     * @see YatzeCategory#LARGE_STRAIGHT
      */
     public static int largeStraight(int die1, int die2, int die3, int die4, int die5) {
-        return instance.scoreForCategoryLargeStraight(of(die1, die2, die3, die4, die5));
+        return instance.processScore(LARGE_STRAIGHT, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryOnes(DiceRollDto)
+     * @see YatzeCategory#ONES
      */
     public static int ones(int die1, int die2, int die3, int die4, int die5) {
-        return instance.scoreForCategoryOnes(of(die1, die2, die3, die4, die5));
+        return instance.processScore(ONES, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryPair(DiceRollDto)
+     * @see YatzeCategory#PAIR
      */
     public static int score_pair(int die1, int die2, int die3, int die4, int die5) {
-        return instance.scoreForCategoryPair(of(die1, die2, die3, die4, die5));
+        return instance.processScore(PAIR, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategorySmallStraight(DiceRollDto)
+     * @see YatzeCategory#SMALL_STRAIGHT
      */
     public static int smallStraight(int die1, int die2, int die3, int die4, int die5) {
-        return instance.scoreForCategorySmallStraight(of(die1, die2, die3, die4, die5));
+        return instance.processScore(SMALL_STRAIGHT, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryThreeOfAKind(DiceRollDto)
+     * @see YatzeCategory#THREE_OF_A_KIND
      */
-    public static int three_of_a_kind(int dice1, int dice2, int dice3, int dice4, int dice5) {
-        return instance.scoreForCategoryThreeOfAKind(of(dice1, dice2, dice3, dice4, dice5));
+    public static int three_of_a_kind(int die1, int die2, int die3, int die4, int die5) {
+        return instance.processScore(THREE_OF_A_KIND, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryThrees(DiceRollDto)
+     * @see YatzeCategory#THREES
      */
-    public static int threes(int dice1, int dice2, int dice3, int dice4, int dice5) {
-        return instance.scoreForCategoryThrees(of(dice1, dice2, dice3, dice4, dice5));
+    public static int threes(int die1, int die2, int die3, int die4, int die5) {
+        return instance.processScore(THREES, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryTwoPairs(DiceRollDto)
+     * @see YatzeCategory#TWO_PAIRS
      */
-    public static int two_pair(int dice1, int dice2, int dice3, int dice4, int dice5) {
-        return instance.scoreForCategoryTwoPairs(of(dice1, dice2, dice3, dice4, dice5));
+    public static int two_pair(int die1, int die2, int die3, int die4, int die5) {
+        return instance.processScore(TWO_PAIRS, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryTwos(DiceRollDto)
+     * @see YatzeCategory#TWOS
      */
-    public static int twos(int dice1, int dice2, int dice3, int dice4, int dice5) {
-        return instance.scoreForCategoryTwos(of(dice1, dice2, dice3, dice4, dice5));
+    public static int twos(int die1, int die2, int die3, int die4, int die5) {
+        return instance.processScore(TWOS, die1, die2, die3, die4, die5);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryYatzy(DiceRollDto)
+     * @see YatzeCategory#YATZY
      */
     public static int yatzy(int... dice) {
-        return instance.scoreForCategoryYatzy(of(dice));
+        return instance.processScore(YATZY, dice);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryFives(DiceRollDto)
+     * @see YatzeCategory#FIVES
      */
     public int fives() {
-        return instance.scoreForCategoryFives(this.roll);
+        return instance.processScore(FIVES, this.dice);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryFours(DiceRollDto)
+     * @see YatzeCategory#FOURS
      */
     public int fours() {
-        return instance.scoreForCategoryFours(this.roll);
+        return instance.processScore(FOURS, this.dice);
     }
 
     /**
-     * @see YatzyScoreApi#scoreForCategorySixes(DiceRollDto)
+     * @see YatzeCategory#SIXES
      */
     public int sixes() {
-        return instance.scoreForCategorySixes(this.roll);
+        return instance.processScore(SIXES, this.dice);
     }
 }
 

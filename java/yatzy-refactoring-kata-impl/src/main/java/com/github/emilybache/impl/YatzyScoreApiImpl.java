@@ -1,309 +1,100 @@
 package com.github.emilybache.impl;
 
-import com.github.emilybache.api.DiceRollDto;
+import com.github.emilybache.api.YatzeCategory;
 import com.github.emilybache.api.YatzyScoreApi;
+import com.github.emilybache.impl.roll.DiceRoll;
+import com.github.emilybache.impl.roll.DiceRollBuilder;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+
+import static com.github.emilybache.api.YatzeCategory.*;
 
 public class YatzyScoreApiImpl implements YatzyScoreApi {
-    /* Thread safe singleton. @see https://fr.wikipedia.org/wiki/Singleton_(patron_de_conception)#Java*/
-    private final static YatzyScoreApiImpl instance = new YatzyScoreApiImpl();
+    private static final Map<YatzeCategory, Function<DiceRoll, Integer>> registry = new HashMap<>();
 
-    private YatzyScoreApiImpl() {
+    static {
+        registry.put(CHANCE, DiceRoll::sum); //@see YatzeCategory#CHANCE
+
+        //Sum of dice with a specific value
+        registry.put(ONES, roll -> roll.sumWithFace(1)); //@see YatzeCategory#ONES
+        registry.put(TWOS, roll -> roll.sumWithFace(2)); //@see YatzeCategory#TWOS
+        registry.put(THREES, roll -> roll.sumWithFace(3)); //@see YatzeCategory#THREES
+        registry.put(FOURS, roll -> roll.sumWithFace(4)); //@see YatzeCategory#FOURS
+        registry.put(FIVES, roll -> roll.sumWithFace(5)); //@see YatzeCategory#FIVES
+        registry.put(SIXES, roll -> roll.sumWithFace(6)); //@see YatzeCategory#SIXES
+
+        //Compare dice to a specific set
+        registry.put(SMALL_STRAIGHT, roll -> List.of(1, 2, 3, 4, 5).equals(roll.getSortedDice()) ? 15:0); //@see YatzeCategory#SMALL_STRAIGHT
+        registry.put(LARGE_STRAIGHT, roll -> List.of(2, 3, 4, 5, 6).equals(roll.getSortedDice()) ? 20:0); //@see YatzeCategory#LARGE_STRAIGHT
+
+        //Check if dices read only one face
+        registry.put(YATZY, roll -> roll.countByFace().size()==1 ? 50:0); //@see YatzeCategory#YATZY
+
+        //Find n-tuple and sum
+        registry.put(PAIR, roll -> scoreForCategoryNumberOfAKind(roll, 2)); //@see YatzeCategory#PAIR
+        registry.put(THREE_OF_A_KIND, roll -> scoreForCategoryNumberOfAKind(roll, 3)); //@see YatzeCategory#THREE_OF_A_KIND
+        registry.put(FOUR_OF_A_KIND, roll -> scoreForCategoryNumberOfAKind(roll, 4)); //@see YatzeCategory#FOUR_OF_A_KIND
+
+        //More complex categories
+        registry.put(TWO_PAIRS, YatzyScoreApiImpl::scoreForCategoryTwoPairs); //@see YatzeCategory#TWO_PAIRS
+        registry.put(FULL_HOUSE, YatzyScoreApiImpl::scoreForCategoryFullHouse); //@see YatzeCategory#FULL_HOUSE
     }
 
-    public final static YatzyScoreApiImpl getInstance() {
-        return instance;
+    @Override
+    public int processScore(YatzeCategory category, int... dice) {
+        assert category!=null:"Category should not be null";
+
+        Function<DiceRoll, Integer> function = registry.get(category);
+        assert function!=null:"Category " + category + " is not implemented";
+
+        //Check and create dice roll:
+        DiceRoll roll = new DiceRollBuilder().dice(dice).build();
+
+        //Execute category function:
+        return function.apply(roll);
     }
+
 
     /**
-     * @see YatzyScoreApi#scoreForCategoryChance(DiceRollDto)
+     * @see YatzeCategory#FULL_HOUSE
      */
-    public int scoreForCategoryChance(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
+    private static int scoreForCategoryFullHouse(DiceRoll roll) {
+        Map<Integer, Integer> countByFaceMap = roll.countByFace();
 
-        int total = 0;
-        total += roll.getDie(1);
-        total += roll.getDie(2);
-        total += roll.getDie(3);
-        total += roll.getDie(4);
-        total += roll.getDie(5);
-        return total;
-    }
+        //TODO Maybe find a better way
+        if (countByFaceMap.size()==2) //As there are only 5 dice, this reduces to 2 possible combinaisons: full house or fourOfAKind
+            return countByFaceMap.entrySet().stream()
+                .filter(e -> e.getValue()==2 || e.getValue()==3) // Filter to full house combinaison
+                .mapToInt(e -> e.getKey() * e.getValue()) // Sum
+                .sum();
 
-    /**
-     * @see YatzyScoreApi#scoreForCategoryFives(DiceRollDto)
-     */
-    public int scoreForCategoryFives(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int s = 0;
-        int i;
-        int[] dice = roll.getDice();
-        for (i = 0; i < dice.length; i++)
-            if (dice[i]==5)
-                s = s + 5;
-        return s;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryFourOfAKind(DiceRollDto)
-     */
-    public int scoreForCategoryFourOfAKind(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int[] tallies;
-        tallies = new int[6];
-        tallies[roll.getDie(1) - 1]++;
-        tallies[roll.getDie(2) - 1]++;
-        tallies[roll.getDie(3) - 1]++;
-        tallies[roll.getDie(4) - 1]++;
-        tallies[roll.getDie(5) - 1]++;
-        for (int i = 0; i < 6; i++)
-            if (tallies[i] >= 4)
-                return (i + 1) * 4;
         return 0;
     }
 
-    /**
-     * @see YatzyScoreApi#scoreForCategoryFours(DiceRollDto)
-     */
-    public int scoreForCategoryFours(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
+    private static int scoreForCategoryNumberOfAKind(DiceRoll roll, int number) {
+        Set<Integer> tuples = roll.findNTuple(number);
 
-        int sum;
-        sum = 0;
-        int[] dice = roll.getDice();
-        for (int at = 0; at!=5; at++) {
-            if (dice[at]==4) {
-                sum += 4;
-            }
+        return tuples.stream()
+            .max(Integer::compare)// In case of severable pairs, keep greatest
+            .map(i -> i * number)//  Sum
+            .orElse(0);
+    }
+
+    /**
+     * @see YatzeCategory#TWO_PAIRS
+     */
+    private static int scoreForCategoryTwoPairs(DiceRoll roll) {
+        Set<Integer> pairs = roll.findNTuple(2); //Find pairs
+
+        if (pairs.size()==2) {
+            return pairs.stream()
+                .mapToInt(pair -> pair * 2) //Sum
+                .sum();
         }
-        return sum;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryFullHouse(DiceRollDto)
-     */
-    public int scoreForCategoryFullHouse(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int[] tallies;
-        boolean _2 = false;
-        int i;
-        int _2_at = 0;
-        boolean _3 = false;
-        int _3_at = 0;
-
-
-        tallies = new int[6];
-        tallies[roll.getDie(1) - 1] += 1;
-        tallies[roll.getDie(2) - 1] += 1;
-        tallies[roll.getDie(3) - 1] += 1;
-        tallies[roll.getDie(4) - 1] += 1;
-        tallies[roll.getDie(5) - 1] += 1;
-
-        for (i = 0; i!=6; i += 1)
-            if (tallies[i]==2) {
-                _2 = true;
-                _2_at = i + 1;
-            }
-
-        for (i = 0; i!=6; i += 1)
-            if (tallies[i]==3) {
-                _3 = true;
-                _3_at = i + 1;
-            }
-
-        if (_2 && _3)
-            return _2_at * 2 + _3_at * 3;
-        else
-            return 0;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryLargeStraight(DiceRollDto)
-     */
-    public int scoreForCategoryLargeStraight(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int[] tallies;
-        tallies = new int[6];
-        tallies[roll.getDie(1) - 1] += 1;
-        tallies[roll.getDie(2) - 1] += 1;
-        tallies[roll.getDie(3) - 1] += 1;
-        tallies[roll.getDie(4) - 1] += 1;
-        tallies[roll.getDie(5) - 1] += 1;
-        if (tallies[1]==1 &&
-                tallies[2]==1 &&
-                tallies[3]==1 &&
-                tallies[4]==1
-                && tallies[5]==1)
-            return 20;
-        return 0;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryOnes(DiceRollDto)
-     */
-    public int scoreForCategoryOnes(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int sum = 0;
-        if (roll.getDie(1)==1) sum++;
-        if (roll.getDie(2)==1) sum++;
-        if (roll.getDie(3)==1) sum++;
-        if (roll.getDie(4)==1) sum++;
-        if (roll.getDie(5)==1)
-            sum++;
-
-        return sum;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryPair(DiceRollDto)
-     */
-    public int scoreForCategoryPair(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int[] counts = new int[6];
-        counts[roll.getDie(1) - 1]++;
-        counts[roll.getDie(2) - 1]++;
-        counts[roll.getDie(3) - 1]++;
-        counts[roll.getDie(4) - 1]++;
-        counts[roll.getDie(5) - 1]++;
-        int at;
-        for (at = 0; at!=6; at++)
-            if (counts[6 - at - 1] >= 2)
-                return (6 - at) * 2;
-        return 0;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategorySixes(DiceRollDto)
-     */
-    public int scoreForCategorySixes(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int sum = 0;
-        int[] dice = roll.getDice();
-        for (int at = 0; at < dice.length; at++)
-            if (dice[at]==6)
-                sum = sum + 6;
-        return sum;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategorySmallStraight(DiceRollDto)
-     */
-    public int scoreForCategorySmallStraight(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int[] tallies;
-        tallies = new int[6];
-        tallies[roll.getDie(1) - 1] += 1;
-        tallies[roll.getDie(2) - 1] += 1;
-        tallies[roll.getDie(3) - 1] += 1;
-        tallies[roll.getDie(4) - 1] += 1;
-        tallies[roll.getDie(5) - 1] += 1;
-        if (tallies[0]==1 &&
-                tallies[1]==1 &&
-                tallies[2]==1 &&
-                tallies[3]==1 &&
-                tallies[4]==1)
-            return 15;
-        return 0;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryThreeOfAKind(DiceRollDto)
-     */
-    public int scoreForCategoryThreeOfAKind(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int[] t;
-        t = new int[6];
-        t[roll.getDie(1) - 1]++;
-        t[roll.getDie(2) - 1]++;
-        t[roll.getDie(3) - 1]++;
-        t[roll.getDie(4) - 1]++;
-        t[roll.getDie(5) - 1]++;
-        for (int i = 0; i < 6; i++)
-            if (t[i] >= 3)
-                return (i + 1) * 3;
-        return 0;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryThrees(DiceRollDto)
-     */
-    public int scoreForCategoryThrees(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int s;
-        s = 0;
-        if (roll.getDie(1)==3) s += 3;
-        if (roll.getDie(2)==3) s += 3;
-        if (roll.getDie(3)==3) s += 3;
-        if (roll.getDie(4)==3) s += 3;
-        if (roll.getDie(5)==3) s += 3;
-        return s;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryTwoPairs(DiceRollDto)
-     */
-    public int scoreForCategoryTwoPairs(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int[] counts = new int[6];
-        counts[roll.getDie(1) - 1]++;
-        counts[roll.getDie(2) - 1]++;
-        counts[roll.getDie(3) - 1]++;
-        counts[roll.getDie(4) - 1]++;
-        counts[roll.getDie(5) - 1]++;
-        int n = 0;
-        int score = 0;
-        for (int i = 0; i < 6; i += 1)
-            if (counts[6 - i - 1] >= 2) {
-                n++;
-                score += (6 - i);
-            }
-        if (n==2)
-            return score * 2;
-        else
-            return 0;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryTwos(DiceRollDto)
-     */
-    public int scoreForCategoryTwos(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int sum = 0;
-        if (roll.getDie(1)==2) sum += 2;
-        if (roll.getDie(2)==2) sum += 2;
-        if (roll.getDie(3)==2) sum += 2;
-        if (roll.getDie(4)==2) sum += 2;
-        if (roll.getDie(5)==2) sum += 2;
-        return sum;
-    }
-
-    /**
-     * @see YatzyScoreApi#scoreForCategoryYatzy(DiceRollDto)
-     */
-    public int scoreForCategoryYatzy(DiceRollDto rollDto) {
-        DiceRoll roll = DiceRoll.from(rollDto);
-
-        int[] counts = new int[6];
-        int[] dice = roll.getDice();
-        for (int die : dice)
-            counts[die - 1]++;
-        for (int i = 0; i!=6; i++)
-            if (counts[i]==5)
-                return 50;
         return 0;
     }
 }
-
-
-
