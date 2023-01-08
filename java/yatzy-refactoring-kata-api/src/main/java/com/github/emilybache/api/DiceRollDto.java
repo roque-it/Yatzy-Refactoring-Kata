@@ -1,7 +1,11 @@
 package com.github.emilybache.api;
 
-public class DiceRollDto {
+public final class DiceRollDto {
     private int[] dice;
+
+    private DiceRollDto() {
+        //private constructor
+    }
 
     public static DiceRollDto of(int... dice) {
         return new DiceRollDto().dice(dice);

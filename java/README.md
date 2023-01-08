@@ -9,3 +9,4 @@ Step 1: format, clean and rearrange code for a better understanding (using edito
 Step 2: split project to decouple legacy API contract from the new API (see constraints above)
 Step 3: split code to decouple legacy API contract from the new API (in creating a "bridge" to the new API)
 Step 4: homogenize methods parameters in introducing a transport object
+Step 5: introducing unit tests based on documentation and legacy tests
